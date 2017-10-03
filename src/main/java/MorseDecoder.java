@@ -53,6 +53,14 @@ public class MorseDecoder {
 
         double[] sampleBuffer = new double[BIN_SIZE * inputFile.getNumChannels()];
         for (int binIndex = 0; binIndex < totalBinCount; binIndex++) {
+            int framesRead = inputFile.readFrames(sampleBuffer, BIN_SIZE);
+                    returnBuffer[binIndex] = 0;
+            for (int sampIndex = 0; sampIndex < BIN_SIZE; sampIndex++) {
+                    returnBuffer[binIndex] += Math.abs(sampleBuffer[sampIndex]);
+            }
+            if (framesRead < BIN_SIZE && !(binIndex == totalBinCount - 1)) {
+                throw new WavFileException("short read frome WAV File");
+            }
             // Get the right number of samples from the inputFile
             // Sum all the samples together and store them in the returnBuffer
         }
@@ -82,10 +90,43 @@ public class MorseDecoder {
          * transitions. You will also have to store how much power or silence you have seen.
          */
 
+        boolean isPower = false,
+                wasPower = false,
+                isSilence = false,
+                wasSilence = false;
+        char dot = '.',
+             dash = '-',
+             space = ' ';
+        String results = null;
+        for (int index = 0; index < powerMeasurements.length - 1; index++) {
+            wasPower = isPower;
+            wasSilence = isSilence;
+            if (powerMeasurements[index] > POWER_THRESHOLD) {
+                isPower = true;
+            } else {
+                isSilence = true;
+            }
+            if (isPower && wasPower) {
+                    results += dash;
+            } else {
+                if (isPower && !wasPower) {
+                    results += dot;
+                } else {
+                    if (isSilence && wasSilence) {
+                        results += space;
+                    } else {
+                        if (isSilence && !wasSilence) {
+                           ;
+                        }
+                    }
+                }
+            }
+        }
         // if ispower and waspower
-        // else if ispower and not waspower
+        // else if ispower and not waspower- ouput
         // else if issilence and wassilence
         // else if issilence and not wassilence
+
 
         return "";
     }
